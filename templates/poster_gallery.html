@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>{{ property_name }} {{ room_number }} - Gallery</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: #0a0a0a;
+    font-family: 'Helvetica Neue', Helvetica, Arial, 'Hiragino Sans', sans-serif;
+    color: #f5f5f5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .card {
+    width: 1080px;
+    height: 1380px;
+    background: #0a0a0a;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ===== Hero full-bleed ===== */
+  .hero-full {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1080px;
+    height: 760px;
+    overflow: hidden;
+  }
+
+  .hero-full img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    filter: brightness(0.92);
+  }
+
+  /* ===== Blur-fill photo treatment =====
+     レターボックス余白を同一写真のぼかしで埋める(ダーク基調に馴染む明度に落とす) */
+  .pfill {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 0;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .pfill::before {
+    content: "";
+    position: absolute;
+    inset: -40px;
+    background: inherit;
+    background-size: cover;
+    background-position: center;
+    filter: blur(26px) brightness(0.8) saturate(0.85);
+    transform: scale(1.15);
+  }
+
+  .pfill > img {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .hero-full .pfill::before {
+    filter: blur(28px) brightness(0.6) saturate(0.85);
+  }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.85) 100%);
+  }
+
+  /* ===== Top brand bar over hero ===== */
+  .top-bar {
+    position: absolute;
+    top: 50px;
+    left: 70px;
+    right: 70px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    z-index: 2;
+  }
+
+  .brand {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-weight: 200;
+    font-size: 22px;
+    letter-spacing: 0.45em;
+    color: #ffffff;
+    text-transform: uppercase;
+  }
+
+  .brand-sub {
+    font-family: 'Hiragino Mincho ProN', serif;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: rgba(255,255,255,0.7);
+    margin-top: 6px;
+  }
+
+  .issue-meta {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-weight: 300;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: #ffffff;
+    text-align: right;
+    text-transform: uppercase;
+  }
+
+  .issue-meta .num {
+    font-size: 26px;
+    font-weight: 200;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-top: 4px;
+  }
+
+  /* ===== Hero caption block =====
+     ヒーロー写真(高さ760px)の下辺から50px上に固定する
+     (カード基準なので bottom = 1380 - 760 + 50 = 670px) */
+  .hero-caption {
+    position: absolute;
+    bottom: 670px;
+    left: 70px;
+    right: 70px;
+    z-index: 2;
+  }
+
+  .label-en {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-weight: 300;
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .property-name {
+    font-family: 'Hiragino Mincho ProN', serif;
+    font-weight: 300;
+    font-size: 52px;
+    line-height: 1.2;
+    color: #ffffff;
+    letter-spacing: 0.03em;
+    font-feature-settings: "palt";
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.35);
+  }
+
+  .property-room {
+    margin-top: 12px;
+    font-family: 'Helvetica Neue', sans-serif;
+    font-weight: 200;
+    font-size: 13px;
+    letter-spacing: 0.3em;
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* ===== Lower black panel ===== */
+  .lower {
+    position: absolute;
+    top: 760px;
+    left: 0;
+    width: 1080px;
+    height: 620px;
+    background: #0a0a0a;
+    padding: 50px 70px 50px;
+  }
+
+  .catchphrase {
+    font-family: 'Hiragino Mincho ProN', serif;
+    font-size: 16px;
+    line-height: 2.0;
+    color: rgba(255,255,255,0.92);
+    letter-spacing: 0.06em;
+    max-width: 600px;
+    font-feature-settings: "palt";
+  }
+
+  .area-block {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    max-width: 600px;
+  }
+
+  .area-text {
+    font-family: 'Hiragino Mincho ProN', serif;
+    font-size: 12.5px;
+    line-height: 1.9;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 0.05em;
+  }
+
+  /* ===== Right-side data column ===== */
+  .data-col {
+    position: absolute;
+    top: 810px;
+    right: 70px;
+    width: 320px;
+  }
+
+  .data-col .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 9px 0;
+    border-bottom: 0.5px solid rgba(255,255,255,0.15);
+  }
+
+  .data-col .label {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-weight: 300;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+  }
+
+  .data-col .value {
+    font-family: 'Hiragino Mincho ProN', serif;
+    font-size: 13px;
+    color: #ffffff;
+    letter-spacing: 0.04em;
+  }
+
+  /* ===== Price row ===== */
+  .price-section {
+    position: absolute;
+    left: 70px;
+    bottom: 290px;
+    display: flex;
+    gap: 60px;
+    align-items: baseline;
+  }
+
+  .price-block .label-en {
+    margin-bottom: 6px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .price-block .amount {
+    font-family: 'Hiragino Mincho ProN', serif;
+    font-weight: 300;
+    font-size: 42px;
+    color: #ffffff;
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+
+  .price-block .amount .yen {
+    font-size: 20px;
+    margin-right: 2px;
+    font-weight: 200;
+  }
+
+  .price-block .sub {
+    font-family: 'Hiragino Mincho ProN', serif;
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.55);
+    margin-top: 8px;
+    letter-spacing: 0.06em;
+  }
+
+  /* ===== Photo strip ===== */
+  .photo-strip {
+    position: absolute;
+    bottom: 50px;
+    left: 70px;
+    right: 70px;
+    height: 200px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.1fr;
+    gap: 14px;
+  }
+
+  .photo-strip .cell {
+    overflow: hidden;
+    background: #1a1a1a;
+  }
+
+  .photo-strip .cell img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .photo-strip .plan-cell {
+    background: #ffffff;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .photo-strip .plan-cell img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <div class="hero-full">
+    <div class="pfill pshave" style="background-image: url('{{ hero_photo_path }}')">
+      <img src="{{ hero_photo_path }}" alt="Hero">
+    </div>
+    <div class="hero-overlay"></div>
+  </div>
+
+  <div class="top-bar">
+    <div>
+      <div class="brand">HOTTO designers</div>
+      <div class="brand-sub">Designer's Residence Collection</div>
+    </div>
+    <div class="issue-meta">
+      No. <span class="num">{{ campaign_no }}</span>
+    </div>
+  </div>
+
+  <div class="hero-caption">
+    <div class="label-en">Featured Residence</div>
+    <div class="property-name">{{ property_name }}</div>
+    <div class="property-room">{{ room_number }} &nbsp;/&nbsp; {{ floor }}F{% if is_corner %} &nbsp;/&nbsp; CORNER{% endif %}</div>
+  </div>
+
+  <div class="lower">
+    <div class="catchphrase">{{ catchphrase }}</div>
+
+    {% if extras.street_desc %}
+    <div class="area-block">
+      <div class="label-en" style="margin-bottom:8px;">About the area</div>
+      <div class="area-text">{{ extras.street_desc }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="data-col">
+    <div class="row">
+      <span class="label">Address</span>
+      <span class="value">{{ address_short }}</span>
+    </div>
+    <div class="row">
+      <span class="label">Station</span>
+      <span class="value">{{ station }} 徒歩{{ walk_minutes }}分</span>
+    </div>
+    <div class="row">
+      <span class="label">Layout</span>
+      <span class="value">{{ layout }} / {{ area_sqm }}㎡</span>
+    </div>
+    <div class="row">
+      <span class="label">Built</span>
+      <span class="value">{{ built_year }}.{{ '%02d'|format(built_month) }}</span>
+    </div>
+  </div>
+
+  <div class="price-section">
+    <div class="price-block">
+      <div class="label-en">Monthly Rent</div>
+      <div class="amount"><span class="yen">¥</span>{{ rent_formatted }}</div>
+      <div class="sub">+ 共益費 ¥{{ common_fee_formatted }}</div>
+    </div>
+    <div class="price-block">
+      <div class="label-en">Initial Cost</div>
+      <div class="amount"><span class="yen">¥</span>{{ initial_cost_formatted }}</div>
+      <div class="sub">敷金0・礼金0</div>
+    </div>
+  </div>
+
+  <div class="photo-strip">
+    <div class="cell">
+      <div class="pfill" style="background-image: url('{{ bottom_photo_1_path }}')">
+        <img src="{{ bottom_photo_1_path }}">
+      </div>
+    </div>
+    <div class="cell">
+      <div class="pfill" style="background-image: url('{{ bottom_photo_2_path }}')">
+        <img src="{{ bottom_photo_2_path }}">
+      </div>
+    </div>
+    <div class="cell plan-cell"><img src="{{ floor_plan_path }}"></div>
+  </div>
+
+</div>
+<!-- SHARED: アスペクト適応フィット。画像とセルの縦横比の乖離係数
+     factor = max(imgR/cellR, cellR/imgR) が 1.35 以下なら cover に切替え、
+     ぼかし帯なしの全面表示にする(乖離が大きい写真は従来どおり contain + ぼかし帯)。
+     間取り図セル(.pfill を使わない)は対象外。
+     .pshave 付きセル(ヒーロー写真)はマイソク切り出し写真対策として、画像外周を
+     一定割合シェーブ(上10% / 左6% / 右2.5% / 下2.5%)してから同じ適応フィットを行う。
+     マイソク由来の上端文字帯(物件情報の焼き込み)や左端の白余白・黒枠線を
+     確実に切り落とすため。clip-path でシェーブ帯は contain 時も一切露出しない。 -->
+<script>
+(function () {
+  var THRESHOLD = 1.35;
+  /* マイソク切り出しヒーロー写真のエッジシェーブ率 (画像の縦横に対する割合) */
+  var SHAVE = { top: 0.10, right: 0.025, bottom: 0.025, left: 0.06 };
+
+  function applyShavedFit(img, cell, cw, ch) {
+    var nw = img.naturalWidth, nh = img.naturalHeight;
+    var ew = nw * (1 - SHAVE.left - SHAVE.right);  /* シェーブ後の有効サイズ */
+    var eh = nh * (1 - SHAVE.top - SHAVE.bottom);
+    var effR = ew / eh, cellR = cw / ch;
+    var factor = Math.max(effR / cellR, cellR / effR);
+    var cover = factor <= THRESHOLD;
+    var s = cover ? Math.max(cw / ew, ch / eh) : Math.min(cw / ew, ch / eh);
+    /* 有効矩形がセル中央に来るよう全体画像を絶対配置し、
+       シェーブ帯は clip-path で完全に非表示にする */
+    img.style.position = 'absolute';
+    img.style.maxWidth = 'none';
+    img.style.objectFit = 'fill';
+    img.style.width = (nw * s) + 'px';
+    img.style.height = (nh * s) + 'px';
+    img.style.left = ((cw - ew * s) / 2 - SHAVE.left * nw * s) + 'px';
+    img.style.top = ((ch - eh * s) / 2 - SHAVE.top * nh * s) + 'px';
+    img.style.clipPath = 'inset(' + (SHAVE.top * 100) + '% ' + (SHAVE.right * 100) + '% '
+                       + (SHAVE.bottom * 100) + '% ' + (SHAVE.left * 100) + '%)';
+    if (cover) {
+      /* ::before は background:inherit のため、これでぼかし背景も消える */
+      cell.style.backgroundImage = 'none';
+    }
+  }
+
+  function applyFit() {
+    var imgs = document.querySelectorAll('.pfill > img');
+    for (var i = 0; i < imgs.length; i++) {
+      var img = imgs[i];
+      var cell = img.parentElement;
+      if (!cell || !img.naturalWidth || !img.naturalHeight) continue;
+      var cw = cell.clientWidth, ch = cell.clientHeight;
+      if (!cw || !ch) continue;
+      if (cell.classList.contains('pshave')) {
+        applyShavedFit(img, cell, cw, ch);
+        continue;
+      }
+      var imgR = img.naturalWidth / img.naturalHeight;
+      var cellR = cw / ch;
+      var factor = Math.max(imgR / cellR, cellR / imgR);
+      if (factor <= THRESHOLD) {
+        img.style.objectFit = 'cover';
+        /* ::before は background:inherit のため、これでぼかし背景も消える */
+        cell.style.backgroundImage = 'none';
+      }
+    }
+  }
+  if (document.readyState === 'complete') { applyFit(); }
+  else { window.addEventListener('load', applyFit); }
+})();
+</script>
+</body>
+</html>

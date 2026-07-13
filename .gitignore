@@ -1,0 +1,21 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+.env
+.streamlit/secrets.toml
+
+# 生成物 / ローカル素材(リポジトリには上げない)
+output/
+samples/
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db

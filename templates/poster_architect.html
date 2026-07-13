@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>{{ property_name }} {{ room_number }} - Architect</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: #fafafa;
+    font-family: 'Helvetica Neue', Helvetica, Arial, 'Hiragino Sans', sans-serif;
+    color: #1a1a1a;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .card {
+    width: 1080px;
+    height: 1380px;
+    background: #fafafa;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ===== thin grid background ===== */
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,0,0,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  /* ===== Header ===== */
+  .top-bar {
+    position: absolute;
+    top: 60px;
+    left: 80px;
+    right: 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 2;
+  }
+
+  .brand {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-weight: 200;
+    font-size: 18px;
+    letter-spacing: 0.5em;
+    color: #1a1a1a;
+    text-transform: uppercase;
+  }
+
+  .brand-line {
+    width: 56px;
+    height: 1px;
+    background: #1a1a1a;
+    margin: 14px 0;
+  }
+
+  .brand-sub {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-weight: 300;
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    color: #555;
+    text-transform: uppercase;
+  }
+
+  .doc-id {
+    font-family: 'SF Mono', 'Menlo', Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: #1a1a1a;
+    text-align: right;
+    line-height: 1.9;
+  }
+
+  .doc-id .key {
+    color: #888;
+    margin-right: 4px;
+  }
+
+  /* ===== Title block ===== */
+  .title-block {
+    position: absolute;
+    top: 170px;
+    left: 80px;
+    right: 80px;
+    z-index: 2;
+  }
+
+  .title-en {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-weight: 200;
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: #888;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  .title-jp {
+    font-family: 'Hiragino Mincho ProN', serif;
+    font-weight: 300;
+    font-size: 44px;
+    line-height: 1.25;
+    color: #1a1a1a;
+    letter-spacing: 0.04em;
+    font-feature-settings: "palt";
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .title-room {
+    margin-top: 14px;
+    font-family: 'SF Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.25em;
+    color: #555;
+  }
+
+  /* ===== Hero ===== */
+  .hero {
+    position: absolute;
+    top: 360px;
+    left: 80px;
+    width: 600px;
+    height: 480px;
+    overflow: hidden;
+    background: #efefef;
+    border: 1px solid #1a1a1a;
+  }
+
+  .hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* ===== Blur-fill photo treatment =====
+     レターボックス余白を同一写真のぼかしで埋める(図面的な静けさを保つ低彩度) */
+  .pfill {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 0;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .pfill::before {
+    content: "";
+    position: absolute;
+    inset: -40px;
+    background: inherit;
+    background-size: cover;
+    background-position: center;
+    filter: blur(26px) brightness(0.97) saturate(0.75);
+    transform: scale(1.15);
+  }
+
+  .pfill > img {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .hero-tag {
+    position: absolute;
+    top: 366px;
+    left: 80px;
+    background: #1a1a1a;
+    color: #fff;
+    padding: 4px 12px;
+    font-family: 'SF Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    z-index: 3;
+  }
+
+  /* ===== Right side: floor plan + specs ===== */
+  .plan-box {
+    position: absolute;
+    top: 360px;
+    left: 720px;
+    width: 280px;
+    height: 250px;
+    background: #ffffff;
+    border: 1px solid #1a1a1a;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .plan-box img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .plan-tag {
+    position: absolute;
+    top: 366px;
+    left: 720px;
+    background: #1a1a1a;
+    color: #fff;
+    padding: 4px 12px;
+    font-family: 'SF Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    z-index: 3;
+  }
+
+  .specs {
+    position: absolute;
+    top: 640px;
+    left: 720px;
+    width: 280px;
+  }
+
+  .specs .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 0.5px dotted #999;
+  }
+
+  .specs .row:last-child { border-bottom: 1px solid #1a1a1a; }
+
+  .specs .label {
+    font-family: 'SF Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    color: #888;
+    text-transform: uppercase;
+  }
+
+  .specs .value {
+    font-family: 'Hiragino Mincho ProN', serif;
+    font-size: 12.5px;
+    color: #1a1a1a;
+    letter-spacing: 0.04em;
+  }
+
+  /* ===== Caption / area description ===== */
+  .caption {
+    position: absolute;
+    top: 870px;
+    left: 80px;
+    right: 80px;
+    z-index: 2;
+  }
+
+  .caption .label {
+    font-family: 'SF Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.3em;
+    color: #888;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .caption-text {
+    font-family: 'Hiragino Mincho ProN', serif;
+    font-size: 15px;
+    line-height: 1.95;
+    color: #1a1a1a;
+    letter-spacing: 0.05em;
+    max-width: 720px;
+    font-feature-settings: "palt";
+  }
+
+  .area-block {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid #e5e5e5;
+    max-width: 920px;
+  }
+
+  .area-text {
+    font-family: 'Hiragino Mincho ProN', serif;
+    font-size: 12.5px;
+    line-height: 1.9;
+    color: #444;
+    letter-spacing: 0.05em;
+  }
+
+  /* ===== Bottom: prices + photo cells =====
+     金額のサブ行(共益費/敷礼)が下の写真セルに重ならない高さに置く */
+  .price-row {
+    position: absolute;
+    top: 1055px;
+    left: 80px;
+    right: 80px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    padding-top: 18px;
+    border-top: 1px solid #1a1a1a;
+    z-index: 2;
+  }
+
+  .price-block .label {
+    font-family: 'SF Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.3em;
+    color: #888;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .price-block .amount {
+    font-family: 'Hiragino Mincho ProN', serif;
+    font-weight: 300;
+    font-size: 38px;
+    color: #1a1a1a;
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+
+  .price-block .amount .yen {
+    font-size: 18px;
+    margin-right: 2px;
+    font-weight: 200;
+  }
+
+  .price-block .sub {
+    font-family: 'Hiragino Mincho ProN', serif;
+    font-size: 11px;
+    color: #888;
+    margin-top: 8px;
+    letter-spacing: 0.06em;
+  }
+
+  /* ===== Photo strip bottom ===== */
+  .photo-strip {
+    position: absolute;
+    bottom: 60px;
+    left: 80px;
+    right: 80px;
+    height: 140px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .photo-strip .cell {
+    overflow: hidden;
+    border: 1px solid #1a1a1a;
+  }
+
+  .photo-strip .cell img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="grid-bg"></div>
+
+  <div class="top-bar">
+    <div>
+      <div class="brand">HOTTO designers</div>
+      <div class="brand-line"></div>
+      <div class="brand-sub">Designer's Residence Collection</div>
+    </div>
+    <div class="doc-id">
+      <div><span class="key">DOC.</span>HD-{{ campaign_no }}</div>
+      <div><span class="key">UNIT.</span>{{ room_number }}</div>
+      <div><span class="key">FLR.</span>{{ floor }}F{% if is_corner %} · CORNER{% endif %}</div>
+    </div>
+  </div>
+
+  <div class="title-block">
+    <div class="title-en">Featured Residence</div>
+    <div class="title-jp">{{ property_name }}</div>
+    <div class="title-room">UNIT NO. {{ room_number }}</div>
+  </div>
+
+  <div class="hero-tag">FIG. 01 — INTERIOR</div>
+  <div class="hero">
+    <div class="pfill pshave" style="background-image: url('{{ hero_photo_path }}')">
+      <img src="{{ hero_photo_path }}" alt="Hero">
+    </div>
+  </div>
+
+  <div class="plan-tag">FIG. 02 — PLAN</div>
+  <div class="plan-box">
+    <img src="{{ floor_plan_path }}" alt="Floor Plan">
+  </div>
+
+  <div class="specs">
+    <div class="row">
+      <span class="label">Address</span>
+      <span class="value">{{ address_short }}</span>
+    </div>
+    <div class="row">
+      <span class="label">Station</span>
+      <span class="value">{{ station }}·{{ walk_minutes }}min</span>
+    </div>
+    <div class="row">
+      <span class="label">Layout</span>
+      <span class="value">{{ layout }}/{{ area_sqm }}㎡</span>
+    </div>
+    <div class="row">
+      <span class="label">Built</span>
+      <span class="value">{{ built_year }}.{{ '%02d'|format(built_month) }}</span>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="label">— Description —</div>
+    <div class="caption-text">{{ catchphrase }}</div>
+
+    {% if extras.street_desc %}
+    <div class="area-block">
+      <div class="area-text">{{ extras.street_desc }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="price-row">
+    <div class="price-block">
+      <div class="label">Monthly Rent</div>
+      <div class="amount"><span class="yen">¥</span>{{ rent_formatted }}</div>
+      <div class="sub">+ 共益費 ¥{{ common_fee_formatted }}</div>
+    </div>
+    <div class="price-block">
+      <div class="label">Initial Cost</div>
+      <div class="amount"><span class="yen">¥</span>{{ initial_cost_formatted }}</div>
+      <div class="sub">敷金0・礼金0</div>
+    </div>
+  </div>
+
+  <div class="photo-strip">
+    <div class="cell">
+      <div class="pfill" style="background-image: url('{{ bottom_photo_1_path }}')">
+        <img src="{{ bottom_photo_1_path }}">
+      </div>
+    </div>
+    <div class="cell">
+      <div class="pfill" style="background-image: url('{{ bottom_photo_2_path }}')">
+        <img src="{{ bottom_photo_2_path }}">
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- SHARED: アスペクト適応フィット。画像とセルの縦横比の乖離係数
+     factor = max(imgR/cellR, cellR/imgR) が 1.35 以下なら cover に切替え、
+     ぼかし帯なしの全面表示にする(乖離が大きい写真は従来どおり contain + ぼかし帯)。
+     間取り図セル(.pfill を使わない)は対象外。
+     .pshave 付きセル(ヒーロー写真)はマイソク切り出し写真対策として、画像外周を
+     一定割合シェーブ(上10% / 左6% / 右2.5% / 下2.5%)してから同じ適応フィットを行う。
+     マイソク由来の上端文字帯(物件情報の焼き込み)や左端の白余白・黒枠線を
+     確実に切り落とすため。clip-path でシェーブ帯は contain 時も一切露出しない。 -->
+<script>
+(function () {
+  var THRESHOLD = 1.35;
+  /* マイソク切り出しヒーロー写真のエッジシェーブ率 (画像の縦横に対する割合) */
+  var SHAVE = { top: 0.10, right: 0.025, bottom: 0.025, left: 0.06 };
+
+  function applyShavedFit(img, cell, cw, ch) {
+    var nw = img.naturalWidth, nh = img.naturalHeight;
+    var ew = nw * (1 - SHAVE.left - SHAVE.right);  /* シェーブ後の有効サイズ */
+    var eh = nh * (1 - SHAVE.top - SHAVE.bottom);
+    var effR = ew / eh, cellR = cw / ch;
+    var factor = Math.max(effR / cellR, cellR / effR);
+    var cover = factor <= THRESHOLD;
+    var s = cover ? Math.max(cw / ew, ch / eh) : Math.min(cw / ew, ch / eh);
+    /* 有効矩形がセル中央に来るよう全体画像を絶対配置し、
+       シェーブ帯は clip-path で完全に非表示にする */
+    img.style.position = 'absolute';
+    img.style.maxWidth = 'none';
+    img.style.objectFit = 'fill';
+    img.style.width = (nw * s) + 'px';
+    img.style.height = (nh * s) + 'px';
+    img.style.left = ((cw - ew * s) / 2 - SHAVE.left * nw * s) + 'px';
+    img.style.top = ((ch - eh * s) / 2 - SHAVE.top * nh * s) + 'px';
+    img.style.clipPath = 'inset(' + (SHAVE.top * 100) + '% ' + (SHAVE.right * 100) + '% '
+                       + (SHAVE.bottom * 100) + '% ' + (SHAVE.left * 100) + '%)';
+    if (cover) {
+      /* ::before は background:inherit のため、これでぼかし背景も消える */
+      cell.style.backgroundImage = 'none';
+    }
+  }
+
+  function applyFit() {
+    var imgs = document.querySelectorAll('.pfill > img');
+    for (var i = 0; i < imgs.length; i++) {
+      var img = imgs[i];
+      var cell = img.parentElement;
+      if (!cell || !img.naturalWidth || !img.naturalHeight) continue;
+      var cw = cell.clientWidth, ch = cell.clientHeight;
+      if (!cw || !ch) continue;
+      if (cell.classList.contains('pshave')) {
+        applyShavedFit(img, cell, cw, ch);
+        continue;
+      }
+      var imgR = img.naturalWidth / img.naturalHeight;
+      var cellR = cw / ch;
+      var factor = Math.max(imgR / cellR, cellR / imgR);
+      if (factor <= THRESHOLD) {
+        img.style.objectFit = 'cover';
+        /* ::before は background:inherit のため、これでぼかし背景も消える */
+        cell.style.backgroundImage = 'none';
+      }
+    }
+  }
+  if (document.readyState === 'complete') { applyFit(); }
+  else { window.addEventListener('load', applyFit); }
+})();
+</script>
+</body>
+</html>
