@@ -87,6 +87,7 @@ from src.message.generator import (  # noqa: E402
     count_line_chars,
     generate_line_message,
 )
+from src.enhancer.upscaler import ensure_delivery_resolution  # noqa: E402
 from src.renderer.render import render_poster  # noqa: E402
 from PIL import Image as PImage  # noqa: E402
 
@@ -512,11 +513,15 @@ def main() -> None:
             if uploaded_img:
                 up_path = workdir / f"manual_{role_key}_{uploaded_img.name}"
                 up_path.write_bytes(uploaded_img.getbuffer())
-                selected_paths[role_key] = up_path
-                st.image(str(up_path), use_container_width=True)
+                selected_paths[role_key] = ensure_delivery_resolution(
+                    up_path, is_floor_plan=(role_key == "floor_plan")
+                )
+                st.image(str(selected_paths[role_key]), use_container_width=True)
                 st.caption("📤 手動アップロード適用")
             elif selected_name != "(なし)":
-                selected_paths[role_key] = image_paths[selected_name]
+                selected_paths[role_key] = ensure_delivery_resolution(
+                    image_paths[selected_name], is_floor_plan=(role_key == "floor_plan")
+                )
                 st.image(str(selected_paths[role_key]), use_container_width=True)
 
     with st.expander(f"PDFから抽出された全 {len(images)} 枚を確認"):

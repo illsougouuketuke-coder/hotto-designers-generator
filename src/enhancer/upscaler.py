@@ -80,3 +80,40 @@ def upscale_floor_plan(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     cv2.imwrite(str(output_path), upscaled, [cv2.IMWRITE_JPEG_QUALITY, 95])
     return output_path
+
+def ensure_delivery_resolution(
+    input_path: Path,
+    min_long_side: int = 1400,
+    max_scale: int = 4,
+    is_floor_plan: bool = False,
+) -> Path:
+    """
+    どんな入力画像でも配信品質の解像度に自動正規化する。
+    長辺が min_long_side 以上ならそのまま返し、不足していれば
+    必要倍率(上限 max_scale)でアップスケールした複製を隣に作って返す。
+
+    冪等: 生成済みの *_norm ファイルがあればそれを再利用する。
+    読み込み失敗など異常時は元のパスをそのまま返す(生成を止めない)。
+    """
+    try:
+        img = cv2.imread(str(input_path))
+        if img is None:
+            return input_path
+        h, w = img.shape[:2]
+        long_side = max(h, w)
+        if long_side >= min_long_side:
+            return input_path
+
+        out_path = input_path.with_name(f"{input_path.stem}_norm{input_path.suffix}")
+        if out_path.exists():
+            return out_path
+
+        scale = min(max_scale, -(-min_long_side // long_side))  # 切り上げ
+        if is_floor_plan:
+            upscale_floor_plan(input_path, out_path, scale=scale)
+        else:
+            # 極小画像はノイズ除去まで、そこそこの画像はシャープ化のみで高速化
+            upscale_photo(input_path, out_path, scale=scale, apply_denoise=long_side <= 600)
+        return out_path
+    except Exception:
+        return input_path
